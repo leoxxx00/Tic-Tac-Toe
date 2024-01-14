@@ -24,9 +24,6 @@ LEARNING_RATE = 0.1
 DISCOUNT_FACTOR = 0.9
 EXPLORATION_PROB = 0.2
 
-# Variables to track game mode
-player_vs_player = False
-
 clicked = True
 count = 0
 
@@ -63,23 +60,16 @@ def b_click(i):
     global clicked, count
 
     if buttons[i]["text"] == "":
-        if player_vs_player:
-            if clicked:
-                buttons[i]["text"] = PLAYER_X
-            else:
-                buttons[i]["text"] = PLAYER_O
-            clicked = not clicked
-        else:
-            buttons[i]["text"] = PLAYER_X
+        buttons[i]["text"] = PLAYER_X
+        count += 1
+        check_if_won()
+
+        # Let AI make a move
+        if count < 9:
+            ai_move = get_ai_move()
+            buttons[ai_move]["text"] = PLAYER_O
             count += 1
             check_if_won()
-
-            # Let AI make a move
-            if count < 9:
-                ai_move = get_ai_move()
-                buttons[ai_move]["text"] = PLAYER_O
-                count += 1
-                check_if_won()
 
 def get_state():
     state = tuple(button["text"] for button in buttons)
@@ -126,35 +116,10 @@ def update_q_values(winner):
         new_q_value = (1 - LEARNING_RATE) * current_q_value + LEARNING_RATE * (reward + DISCOUNT_FACTOR * max_next_q_value)
         update_q_value(state, action, new_q_value)
 
-# Function to switch between player vs. player and player vs. AI modes
-def switch_mode():
-    global player_vs_player, clicked, count
-    player_vs_player = not player_vs_player
-    clicked = True
-    count = 0
-    reset()
-
-# Function to reset the game
-def reset():
-    global clicked, count
-    clicked = True
-    count = 0
-    for button in buttons:
-        button.config(text="", state=NORMAL, bg="SystemButtonFace")
-
-# Button to switch game mode
-mode_button = Button(root, text="Switch Mode", command=switch_mode)
-mode_button.grid(row=3, column=0, columnspan=3)
-
-# Button to reset the game
-reset_button = Button(root, text="Reset Game", command=reset)
-reset_button.grid(row=4, column=0, columnspan=3)
-
 # Grid the buttons
 for i, button in enumerate(buttons):
     button.grid(row=i // 3, column=i % 3)
 
-# Tkinter main loop
 root.mainloop()
 
 # Save Q-values to file
